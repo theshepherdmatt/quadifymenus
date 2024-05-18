@@ -25,12 +25,12 @@ sudo apt-get update
 
 * Download source files (this repository).
 ```bash
-git clone https://github.com/theshepherdmatt/Quadify-volumio.git
+git clone https://github.com/theshepherdmatt/Quadify-Evo.git
 ```
 
 * Enter the directory for Volumio
 ```bash
-cd Quadify-volumio/oled
+cd Quadify-Evo/oled
 ```
 
 * Run the installation script **as root** to install all available features
