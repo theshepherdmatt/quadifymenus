@@ -61,12 +61,12 @@ Description=Startup Indicator LED Service
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/node /home/volumio/Quadify-volumio/oled/startupindicator.js
+ExecStart=/usr/bin/node /home/volumio/Quadify-Evo/oled/startupindicator.js
 Restart=no
 User=volumio
 Environment=PATH=/usr/bin:/usr/local/bin
 Environment=NODE_ENV=production
-WorkingDirectory=/home/volumio/Quadify-volumio/oled/
+WorkingDirectory=/home/volumio/Quadify-Evo/oled/
 StandardOutput=journal
 StandardError=journal
 
