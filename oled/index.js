@@ -97,8 +97,8 @@ var extn_exit_sleep_mode = false;
 const opts = {
 	width: 256,
 	height: 64,
-	dcPin: 24,
-	rstPin : 25,
+	dcPin: 27,
+	rstPin : 24,
 	contrast : CONTRAST,
 	device: "/dev/spidev0.0",
 };

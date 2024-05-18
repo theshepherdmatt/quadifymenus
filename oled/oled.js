@@ -468,11 +468,10 @@ Oled.prototype.setContrast = function(contrast,cb){
 
 
 Oled.prototype.drawPixel = function(x, y, color, bypass_buffer) {
-    // Calculate the new x and y coordinates for the rotated display
-    let newX = this.WIDTH - x - 1;
-    let newY = this.HEIGHT - y - 1;
+    // Use original x and y coordinates
+    let newX = x;
+    let newY = y;
 
-    // Update the rest of the function with the new x and y coordinates
     // Ne rien faire si le pixel n'est pas dans l'espace de l'écran
     if (	
             newX >= this.WIDTH  || 

@@ -14,15 +14,20 @@ const bus = i2c.openSync(1);
 console.log("Configuring MCP23017 I/O expander.");
 
 // Configure Ports
-bus.writeByteSync(MCP23017_ADDRESS, MCP23017_IODIRB, 0x3C);
-bus.writeByteSync(MCP23017_ADDRESS, MCP23017_GPPUB, 0x3C);
-bus.writeByteSync(MCP23017_ADDRESS, MCP23017_IODIRA, 0x00);
+bus.writeByteSync(MCP23017_ADDRESS, MCP23017_IODIRB, 0x3C);  // Set GPB2-5 as inputs
+bus.writeByteSync(MCP23017_ADDRESS, MCP23017_GPPUB, 0x3C);   // Enable pull-ups on GPB2-5
+bus.writeByteSync(MCP23017_ADDRESS, MCP23017_IODIRA, 0x00);  // Set GPA0-7 as outputs
 
-const button_map = [[2, 1], [4, 3], [6, 5], [8, 7]];
+const button_map = [[2, 1], [4, 3], [6, 5], [8, 7]]; // Button mappings
 let prev_button_state = [[1, 1], [1, 1], [1, 1], [1, 1]];
+let led_state = 0;
 
-function control_leds(led_state) {
-    bus.writeByteSync(MCP23017_ADDRESS, MCP23017_GPIOA, led_state);
+function control_leds(state) {
+    console.log(`Setting LED state to: ${state.toString(2).padStart(8, '0')}`);
+    bus.writeByteSync(MCP23017_ADDRESS, MCP23017_GPIOA, state);
+    // Read back the GPIOA state to verify
+    const read_back = bus.readByteSync(MCP23017_ADDRESS, MCP23017_GPIOA);
+    console.log(`Read back GPIOA state: ${read_back.toString(2).padStart(8, '0')}`);
 }
 
 function read_button_matrix() {
@@ -73,9 +78,9 @@ function executeCommand(command) {
     }
 }
 
-
 function check_buttons_and_update_leds() {
     const button_matrix = read_button_matrix();
+
     for (let row = 0; row < 4; row++) {
         for (let col = 0; col < 2; col++) {
             const button_id = button_map[row][col];
@@ -83,12 +88,15 @@ function check_buttons_and_update_leds() {
             if (current_button_state === 0 && prev_button_state[row][col] !== current_button_state) {
                 console.log(`Button ${button_id} pressed`);
                 executeCommand(getCommandForButton(button_id));
-                const led_state = 1 << (8 - button_id);
+                
+                // Update LED state based on button press
+                led_state |= 1 << (button_id - 1);
                 control_leds(led_state);
             }
             prev_button_state[row][col] = current_button_state;
         }
     }
+
     setTimeout(check_buttons_and_update_leds, 100);
 }
 
@@ -101,13 +109,13 @@ function getCommandForButton(buttonId) {
         case 5: return "repeat";
         case 6: return "random";
         case 7: return "clear";
-        case 8: return "sudo systemctl restart oled.service";
+        case 8: return "";
         default: return "";
     }
 }
 
-const PLAY_LED = 8;
-const PAUSE_LED = 7;
+const PLAY_LED = 1;  // LED 1 corresponds to button 1
+const PAUSE_LED = 2; // LED 2 corresponds to button 2
 
 function updatePlayPauseLEDs() {
     if (platform === 'volumio') {
@@ -121,7 +129,14 @@ function updatePlayPauseLEDs() {
                 return;
             }
 
-            let led_state = currentState === 'play' ? (1 << (PLAY_LED - 1)) : (1 << (PAUSE_LED - 1));
+            if (currentState === 'play') {
+                led_state |= (1 << (PLAY_LED - 1)); // Turn on PLAY_LED
+                led_state &= ~(1 << (PAUSE_LED - 1)); // Turn off PAUSE_LED
+            } else if (currentState === 'pause') {
+                led_state |= (1 << (PAUSE_LED - 1)); // Turn on PAUSE_LED
+                led_state &= ~(1 << (PLAY_LED - 1)); // Turn off PLAY_LED
+            }
+
             control_leds(led_state);
         });
     }
@@ -135,3 +150,4 @@ detectPlatform(() => {
     check_buttons_and_update_leds();
     startStatusUpdateLoop();
 });
+
