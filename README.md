@@ -35,7 +35,7 @@ cd Quadify-Evo/oled
 
 * Run the installation script **as root** to install all available features
 ```bash
-sudo bash dist_install.sh "volumio"
+sudo bash dist_install.sh
 ```
 
 * Post-installation, a system reboot might be necessary to apply the changes effectively. You’ll be informed via command line if such an action is required.
