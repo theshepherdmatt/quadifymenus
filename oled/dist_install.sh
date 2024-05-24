@@ -90,36 +90,31 @@ EOL
 log_message "${GREEN}Quadify's audiophile installation is tuning up...${NC}"
 install_node_and_npm
 
-# Main installation script with an audiophile theme
-case "$1" in
-    'volumio')
-        start_time="$(date +"%T")"
-        log_message "* Setting up the stage for Quadify OLED on Volumio"
-        install_dep_volumio
-        npm install async i2c-bus pi-spi onoff date-and-time socket.io-client@2.1.1 spi-device >> $LOG_FILE 2>> $LOG_FILE
+# Installation steps for Volumio
+start_time="$(date +"%T")"
+log_message "* Setting up the stage for Quadify OLED on Volumio"
+install_dep_volumio
+npm install async i2c-bus pi-spi onoff date-and-time socket.io-client@2.1.1 spi-device >> $LOG_FILE 2>> $LOG_FILE
 
-        # Setting up the stage for SPI interfacing, like fine-tuning your turntable
-        echo "spi-dev" | sudo tee -a /etc/modules > /dev/null
-        echo "dtparam=spi=on" | sudo tee -a /boot/userconfig.txt > /dev/null
+# Setting up the stage for SPI interfacing, like fine-tuning your turntable
+echo "spi-dev" | sudo tee -a /etc/modules > /dev/null
+echo "dtparam=spi=on" | sudo tee -a /boot/userconfig.txt > /dev/null
 
-        # Check for SPI buffer size like checking for the right pressure on your vinyl
-        if [ ! -f "/etc/modprobe.d/spidev.conf" ] || ! grep -q 'bufsiz=8192' /etc/modprobe.d/spidev.conf; then
-            echo "options spidev bufsiz=8192" | sudo tee -a /etc/modprobe.d/spidev.conf > /dev/null
-        fi
+# Check for SPI buffer size like checking for the right pressure on your vinyl
+if [ ! -f "/etc/modprobe.d/spidev.conf" ] || ! grep -q 'bufsiz=8192' /etc/modprobe.d/spidev.conf; then
+    echo "options spidev bufsiz=8192" | sudo tee -a /etc/modprobe.d/spidev.conf > /dev/null
+fi
 
-        # Setting up the OLED service, like setting up your amplifier
-        printf "[Unit]\nDescription=Quadify OLED Display Service\nAfter=volumio.service\n[Service]\nWorkingDirectory=%s\nExecStart=/usr/bin/node %s/index.js volumio\nExecStop=/usr/bin/node %s/off.js\nStandardOutput=null\nType=simple\nUser=volumio\n[Install]\nWantedBy=multi-user.target" "$PWD" "$PWD" "$PWD" | sudo tee /etc/systemd/system/oled.service > /dev/null
-        sudo systemctl enable oled > /dev/null 2>> $LOG_FILE
+# Setting up the OLED service, like setting up your amplifier
+printf "[Unit]\nDescription=Quadify OLED Display Service\nAfter=volumio.service\n[Service]\nWorkingDirectory=%s\nExecStart=/usr/bin/node %s/index.js\nExecStop=/usr/bin/node %s/off.js\nStandardOutput=null\nType=simple\nUser=volumio\n[Install]\nWantedBy=multi-user.target" "$PWD" "$PWD" "$PWD" | sudo tee /etc/systemd/system/oled.service > /dev/null
+sudo systemctl enable oled > /dev/null 2>> $LOG_FILE
 
-        # Restart the OLED service, like dropping the needle on a fresh record
-        sudo systemctl restart oled
+# Restart the OLED service, like dropping the needle on a fresh record
+sudo systemctl restart oled
 
-        # Set up the Startup Indicator LED Service
-        setup_startup_indicator_service
+# Set up the Startup Indicator LED Service
+setup_startup_indicator_service
 
-        log_message "${GREEN}The Quadify Dac is set, Happy Listening!!${NC}"
-        ;;
-
-esac
+log_message "${GREEN}The Quadify Dac is set, Happy Listening!!${NC}"
 
 log_message "Installation began at $start_time and concluded at $(date +"%T"). Enjoy the music!"
