@@ -1,0 +1,3 @@
+
+debconf: delaying package configuration, since apt-utils is not installed
+started at 13:09:30 finished at 13:10:53
