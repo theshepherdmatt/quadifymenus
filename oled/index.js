@@ -634,45 +634,42 @@ ap_oled.prototype.get_ip = function(){
 	catch(e){this.ip = null;}
 }
 
+ap_oled.prototype.handle_sleep = function(exit_sleep) {
+    if (!exit_sleep) { // Should the display go into sleep mode?
+        if (!this.iddle_timeout) { // Check if the screen is not already waiting to go into sleep mode (instruction initiated in a previous cycle).
+            let _deepsleep_ = () => { this.deep_sleep(); }
+            let _screensaver_ = () => {
+                this.snake_screensaver();
+                this.iddle_timeout = setTimeout(_deepsleep_, TIME_BEFORE_DEEPSLEEP);
+            }
+            let _clock_ = () => {
+                this.clock_mode();
+                this.iddle_timeout = setTimeout(_screensaver_, TIME_BEFORE_SCREENSAVER);
+            }
+            this.iddle_timeout = setTimeout(_clock_, TIME_BEFORE_CLOCK);
+        }
+    } else {
+        if (this.status_off) {
+            this.status_off = null;
+            this.driver.turnOnDisplay();
+        }
 
-ap_oled.prototype.handle_sleep = function(exit_sleep){
-	
-	if( !exit_sleep ){ // Should the display go into sleep mode?
-		
-		if(!this.iddle_timeout){ // Check if the screen is not already waiting to go into sleep mode (instruction initiated in a previous cycle).
-			
-		
-			let _deepsleep_ = ()=>{this.deep_sleep();}
-		
-			let _screensaver_ = ()=>{
-				this.snake_screensaver();
-				this.iddle_timeout = setTimeout(_deepsleep_,TIME_BEFORE_DEEPSLEEP);
-			}
-			
-			let _clock_ = ()=>{
-				this.clock_mode();
-				this.iddle_timeout = setTimeout(_screensaver_,TIME_BEFORE_SCREENSAVER);
-			}
-			
-			this.iddle_timeout = setTimeout( _clock_ , TIME_BEFORE_CLOCK );
-		}
-	}
-	else{
-		if(this.status_off){
-			this.status_off = null;
-			this.driver.turnOnDisplay();
-		}
-		
-		if(this.page !== "spdif" ){
-			this.playback_mode();
-		}
+        // Comment out the playback mode
+        // if (this.page !== "spdif" ) {
+        //     this.playback_mode();
+        // }
+        
+        if (this.page !== "clock") { // Ensure it switches to clock mode only
+            this.clock_mode();
+        }
 
-		if(this.iddle_timeout){
-			clearTimeout(this.iddle_timeout);
-			this.iddle_timeout = null;
-		}
-	}
+        if (this.iddle_timeout) {
+            clearTimeout(this.iddle_timeout);
+            this.iddle_timeout = null;
+        }
+    }
 }
+
 	
 fs.readFile("config.json",(err,data)=>{
 	
@@ -715,7 +712,7 @@ fs.readFile("config.json",(err,data)=>{
 	        }
 	        setTimeout(() => {
 	            OLED.driver.fullRAMclear(() => {
-	                OLED.playback_mode();
+	                OLED.clock_mode();
 	                OLED.listen_to(distro, 1000);
 	                OLED.listen_to("ip", 1000);
 	            });
