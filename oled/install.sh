@@ -39,13 +39,13 @@ install_node_and_npm() {
 # Function to install dependencies for Volumio with a touch of audiophile elegance
 install_dep_volumio() {
     if apt-get -qq install build-essential > /dev/null 2>&1; then
-        log_message("${GREEN}Essential building blocks are in place, like a solid music collection.${NC}")
+        log_message "${GREEN}Essential building blocks are in place, like a solid music collection.${NC}"
     else
-        log_message("${YELLOW}Missing some tunes in your collection, attempting a rare find workaround...${NC}")
+        log_message "${YELLOW}Missing some tunes in your collection, attempting a rare find workaround...${NC}"
         if bash Workaround_BuildEssentials.sh > /dev/null 2>> $LOG_FILE; then
-            log_message("${GREEN}...Success! Your Dac is almost complete.${NC}")
+            log_message "${GREEN}...Success! Your Dac is almost complete.${NC}"
         else
-            log_message("${RED}...No luck, the tunes remain elusive. The OLED display can't be installed without it.${NC}")
+            log_message "${RED}...No luck, the tunes remain elusive. The OLED display can't be installed without it.${NC}"
             exit 1
         fi
     fi
@@ -53,7 +53,7 @@ install_dep_volumio() {
 
 # Function to create and enable the startup indicator service
 setup_startup_indicator_service() {
-    log_message("${YELLOW}Setting up the Startup Indicator LED Service...${NC}")
+    log_message "${YELLOW}Setting up the Startup Indicator LED Service...${NC}"
     # Create the systemd service file
     sudo tee /etc/systemd/system/startup-indicator.service > /dev/null <<EOL
 [Unit]
@@ -83,28 +83,28 @@ EOL
     # Start the service
     sudo systemctl start startup-indicator.service
 
-    log_message("${GREEN}Startup Indicator LED Service has been created, enabled, and started.${NC}")
+    log_message "${GREEN}Startup Indicator LED Service has been created, enabled, and started.${NC}"
 }
 
 # Function to install the remote script
 install_remote_script() {
-    log_message("${YELLOW}Running the remote install script...${NC}")
+    log_message "${YELLOW}Running the remote install script...${NC}"
     if [ -f "Quadify-Evo/remote/install.sh" ]; then
         (cd Quadify-Evo/remote && bash install.sh >> $LOG_FILE 2>> $LOG_FILE)
-        log_message("${GREEN}Remote install script executed successfully.${NC}")
+        log_message "${GREEN}Remote install script executed successfully.${NC}"
     else
-        log_message("${RED}Remote install script not found!${NC}")
+        log_message "${RED}Remote install script not found!${NC}"
         exit 1
     fi
 }
 
 # Start the installation with a bit of flair
-log_message("${GREEN}Quadify's audiophile installation is tuning up...${NC}")
+log_message "${GREEN}Quadify's audiophile installation is tuning up...${NC}"
 install_node_and_npm
 
 # Installation steps for Volumio
 start_time="$(date +"%T")"
-log_message("* Setting up the stage for Quadify OLED on Volumio")
+log_message "* Setting up the stage for Quadify OLED on Volumio"
 install_dep_volumio
 npm install async i2c-bus pi-spi onoff date-and-time socket.io-client@2.1.1 spi-device >> $LOG_FILE 2>> $LOG_FILE
 
@@ -130,6 +130,6 @@ setup_startup_indicator_service
 # Install the remote script
 install_remote_script
 
-log_message("${GREEN}The Quadify Dac is set, Happy Listening!!${NC}")
+log_message "${GREEN}The Quadify Dac is set, Happy Listening!!${NC}"
 
-log_message("Installation began at $start_time and concluded at $(date +"%T"). Enjoy the music!")
+log_message "Installation began at $start_time and concluded at $(date +"%T"). Enjoy the music!"
