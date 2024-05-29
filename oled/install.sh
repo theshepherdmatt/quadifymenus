@@ -89,8 +89,8 @@ EOL
 # Function to install the remote script
 install_remote_script() {
     log_message "${YELLOW}Running the remote install script...${NC}"
-    if [ -f "Quadify-Evo/remote/install.sh" ]; then
-        (cd Quadify-Evo/remote && bash install.sh >> $LOG_FILE 2>> $LOG_FILE)
+    if [ -f "$(pwd)/../remote/install.sh" ]; then
+        (cd ../remote && bash install.sh >> $LOG_FILE 2>> $LOG_FILE)
         log_message "${GREEN}Remote install script executed successfully.${NC}"
     else
         log_message "${RED}Remote install script not found!${NC}"
