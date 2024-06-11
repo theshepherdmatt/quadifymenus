@@ -1,4 +1,5 @@
 const io = require('socket.io-client');
+const http = require('http');
 const EventEmitter = require('events').EventEmitter;
 
 class VolumioListener extends EventEmitter {
@@ -11,14 +12,8 @@ class VolumioListener extends EventEmitter {
         this.state = "stop";
         this.formatedMainString = "";
         this.data = {};
-        this.watchingIdle = false;
         this.firstRequestConsumed = false;
         this.listen();
-        this.idle = false;
-        this._idleTimeout = null;
-        this.idleTime = 900;
-        this.lastSeekEmit = Date.now();
-        this.seekThrottleMs = 500; // Throttle seek updates to once every 500ms
     }
 
     compareData(data) {
@@ -43,92 +38,34 @@ class VolumioListener extends EventEmitter {
                     this.emit("trackChange", this.formatedMainString);
                     this.data.formatedMainString = this.formatedMainString;
                 }
-                if (this.state === "play") this.resetIdleTimeout();
                 break;
             case "status":
                 if (this.state !== data) {
                     this.state = data;
-                    this.resetIdleTimeout();
                     this.emit("stateChange", data);
                 }
                 break;
-            case "duration":
             case "seek":
-                const now = Date.now();
-                if (now - this.lastSeekEmit > this.seekThrottleMs) {
-                    this.resetIdleTimeout();
-                    this.seekFormat();
-                    if (this.formatedSeek.seek_string !== this.data.seek_string) {
-                        this.emit("seekChange", this.formatedSeek);
-                        this.data.seek_string = this.formatedSeek.seek_string;
-                        this.lastSeekEmit = now;
-                    }
+            case "duration":
+                this.seekFormat();
+                if (this.formatedSeek.seek_string !== this.data.seek_string) {
+                    this.emit("seekChange", this.formatedSeek);
+                    this.data.seek_string = this.formatedSeek.seek_string;
                 }
-                break;
-            case "bitrate":
-                this.emit("bitRateChange", data);
-                this.emit("line2", `Bit Rate : ${data}`);
                 break;
             case "volume":
-                this.resetIdleTimeout();
                 this.emit("volumeChange", data);
                 break;
-            case "samplerate":
-                this.emit("sampleRateChange", data);
-                this.emit("line0", `Sample Rate : ${data}`);
-                break;
-            case "bitdepth":
-                this.emit("sampleDepthChange", data);
-                this.emit("line1", `Sample Depth : ${data}`);
-                break;
-            case "albumart":
-                if (data === "/albumart") {
-                    const delayedEmit = () => this.emit("coverChange", `${this.host}${data}`);
-                    const waitAndEmit = setTimeout(delayedEmit, 5000);
-                    const cancelDelayedEmit = () => clearTimeout(waitAndEmit);
-                    this.once("coverChange", cancelDelayedEmit);
-                    return;
-                }
-                if (/https?:\/\//.test(data)) {
-                    this.emit("coverChange", data);
-                    return;
-                }
-                if (data[0] !== "/") data = `/${data}`;
-                this.emit("coverChange", `${this.host}${data}`);
-                break;
-            case "uri":
-                this.emit("file", data);
-                break;
-            case "channels":
-                this.emit("channelsChange", data);
-                this.emit("line3", `Channels : ${data}`);
-                break;
-            case "trackType":
-                const pdata = data.replace(/audio/gi, "");
-                this.emit("encodingChange", pdata);
-                this.emit("line4", `Track Type : ${pdata}`);
-                break;
-            case "position":
-                const position = parseInt(data) + 1;
-                this.emit("songIdChange", position);
-                const playlistLength = this.data?.playlistlength || 1;
-                this.emit("line5", `Playlist : ${position} / ${playlistLength}`);
-                break;
-            case "repeat":
-            case "repeatSingle":
-                this.emit("repeatChange", data);
-                this.emit("line6", `Repeat : ${data}`);
-                break;
+            // Other cases for other data fields as needed
         }
     }
 
     listen() {
         this._socket = io.connect(this.host);
         this.api_caller = setInterval(() => {
-            if (this.waiting || this.state !== "play") return;
+            if (this.waiting) return;
             this.waiting = true;
             this._socket.emit("getState");
-            this._socket.emit("getQueue");
         }, this.refreshrate_ms);
 
         this._socket.on("pushState", (data) => {
@@ -139,14 +76,6 @@ class VolumioListener extends EventEmitter {
             }
             this.compareData(data);
             this.waiting = false;
-        });
-
-        this._socket.on("pushQueue", (resdata) => {
-            if (resdata && resdata[0]) {
-                const additionnalTrackData = resdata[0], filteredData = {};
-                filteredData.playlistlength = resdata.length;
-                this.compareData(filteredData);
-            }
         });
     }
 
@@ -182,29 +111,47 @@ class VolumioListener extends EventEmitter {
         this.formatedMainString = `${this.data.title}${this.data.artist ? ` - ${this.data.artist}` : ""}${this.data.album ? ` - ${this.data.album}` : ""}`;
     }
 
-    watchIdleState(idleTime) {
-        this.watchingIdle = true;
-        this.idleTime = idleTime;
-        clearTimeout(this._idleTimeout);
-        this._idleTimeout = setTimeout(() => {
-            if (!this.watchingIdle) return;
-            this.idle = true;
-            this.emit("idleStart");
-        }, this.idleTime);
-    }
+    checkVolumioStatus(onReady) {
+        const options = {
+            host: 'localhost',
+            port: 3000,
+            path: '/api/v1/getState',
+            method: 'GET'
+        };
 
-    resetIdleTimeout() {
-        if (!this.watchingIdle) return;
-        if (this.idle) this.emit("idleStop");
-        this.idle = false;
-        this._idleTimeout.refresh();
-    }
+        console.log('Checking Volumio status...');
 
-    clearIdleTimeout() {
-        this.watchingIdle = false;
-        if (this.idle) this.emit("idleStop");
-        this.idle = false;
-        clearTimeout(this._idleTimeout);
+        const request = http.request(options, (res) => {
+            let data = '';
+
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+
+            res.on('end', () => {
+                try {
+                    const parsedData = JSON.parse(data);
+                    console.log(`Volumio status: ${parsedData.status}`);  // Debug log
+                    if (parsedData.status === 'play' || parsedData.status === 'stop' || parsedData.status === 'pause') {
+                        console.log('Volumio is ready.');
+                        onReady();
+                    } else {
+                        console.log('Volumio is not ready yet. Retrying...');
+                        setTimeout(() => this.checkVolumioStatus(onReady), 5000); // Check again after 5 seconds
+                    }
+                } catch (e) {
+                    console.log('Error parsing Volumio status. Retrying...');
+                    setTimeout(() => this.checkVolumioStatus(onReady), 5000); // Check again after 5 seconds
+                }
+            });
+        });
+
+        request.on('error', (e) => {
+            console.error(`Problem with request: ${e.message}`);
+            setTimeout(() => this.checkVolumioStatus(onReady), 5000); // Check again after 5 seconds
+        });
+
+        request.end();
     }
 }
 
