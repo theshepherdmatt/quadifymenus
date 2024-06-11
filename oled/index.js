@@ -5,7 +5,7 @@ const APOled = require('./oledcontroller');
 const TIME_BEFORE_CLOCK = 6000; // in ms
 const TIME_BEFORE_SCREENSAVER = 600000; // in ms
 const TIME_BEFORE_DEEPSLEEP = 600000; // in ms
-const LOGO_DURATION = 15000; // in ms
+const LOGO_DURATION = 5000; // in ms
 const CONTRAST = 254; // range 1-254
 
 const opts = {
