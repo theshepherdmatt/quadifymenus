@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Load unifont.hex file from the oled folder
-const unifontFilePath = path.join(__dirname, '../oled/unifont.hex');
+const unifontFilePath = path.join(__dirname, '../unifont.hex');
 const unifontData = fs.readFileSync(unifontFilePath, 'utf8');
 
 // Parse unifont.hex data into a usable map
