@@ -11,8 +11,8 @@ const CONTRAST = 254; // range 1-254
 const opts = {
     width: 256,
     height: 64,
-    dcPin: 27,
-    rstPin: 24,
+    dcPin: 24,
+    rstPin: 25,
     contrast: CONTRAST,
     device: "/dev/spidev0.0",
     divisor: 0xf1,
