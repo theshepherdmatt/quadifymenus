@@ -469,8 +469,8 @@ Oled.prototype.setContrast = function(contrast,cb){
 
 Oled.prototype.drawPixel = function(x, y, color, bypass_buffer) {
     // Use original x and y coordinates
-    let newX = x;
-    let newY = y;
+    let newX = this.WIDTH - x - 1;
+    let newY = this.HEIGHT - y - 1;
 
     // Ne rien faire si le pixel n'est pas dans l'espace de l'écran
     if (	
