@@ -110,7 +110,7 @@ function handleButtonPress(button_id) {
     }
 
     // Update LEDs to ensure only the current button's LED is on
-    led_state = 1 << (button_id - 1);
+    led_state = 1 << (8 - button_id);
     control_leds(led_state);
 }
 
