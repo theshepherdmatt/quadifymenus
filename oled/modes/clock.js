@@ -106,7 +106,7 @@ module.exports = function clock_mode() {
     this.page = "clock";
 
     this.refresh_action = () => {
-        this.driver.buffer.fill(0x00);
+        this.driver.buffer.fill(0x00); // Clear the display buffer
         const ftime = date.format(new Date(), 'HH:mm');
 
         // Define the scale factor
@@ -116,15 +116,19 @@ module.exports = function clock_mode() {
         const { width, height } = getStringDimensions(ftime, scale);
 
         // Calculate the top-left corner to center the string
-        const screenWidth = this.driver.WIDTH; // Adjust based on your actual screen width
-        const screenHeight = this.driver.HEIGHT; // Adjust based on your actual screen height
-        const startX = Math.floor((screenWidth - width) / 2);
-        const startY = Math.floor((screenHeight - height) / 2);
+        const screenWidth = this.driver.WIDTH;  // Screen width (256 in your case)
+        const screenHeight = this.driver.HEIGHT;  // Screen height (64 in your case)
+        
+        const startX = Math.floor((screenWidth - width) / 2); // Center horizontally
+
+        // Shift up the Y-axis by 10 pixels (adjust this value as needed)
+        const shiftUp = 10;
+        const startY = Math.floor((screenHeight - height) / 2) - shiftUp;
 
         // Draw the scaled and centered time string with anti-aliasing
         drawScaledStringWithAA(ftime, startX, startY, scale, this.driver);
 
-        this.driver.update(true);
+        this.driver.update(true); // Update the display to show the new frame
     }
 
     this.refresh_action();
