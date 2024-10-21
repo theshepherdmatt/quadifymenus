@@ -1,5 +1,5 @@
 const { checkVolumioStatus } = require('./volumiostatus');
-const { runButtonsLedsScript } = require('./utils');
+const { runButtonsLedsScript, runRotaryScript } = require('./utils'); // Add runRotaryScript import
 const APOled = require('./oledcontroller');
 
 const TIME_BEFORE_CLOCK = 6000; // in ms
@@ -25,7 +25,8 @@ var currentMode = 'clock'; // Define currentMode globally
 
 // Run both buttonsleds.js and rotary.js on startup
 console.log("Starting scripts...");
-runButtonsLedsScript();
+runButtonsLedsScript(); // Start buttons and LEDs script
+runRotaryScript(); // Start rotary script
 
 const OLED = new APOled(opts, TIME_BEFORE_CLOCK, TIME_BEFORE_SCREENSAVER, TIME_BEFORE_DEEPSLEEP);
 var logo_start_display_time = 0;
