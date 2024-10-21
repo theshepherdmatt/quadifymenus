@@ -18,4 +18,9 @@ function runButtonsLedsScript() {
     runScript('buttonsleds');
 }
 
-module.exports = { runScript, runButtonsLedsScript };
+function runRotaryScript() {
+    console.log("Running rotary.js script...");
+    runScript('rotary');
+}
+
+module.exports = { runScript, runButtonsLedsScript, runRotaryScript };
