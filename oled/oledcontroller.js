@@ -1,6 +1,5 @@
 const APOled = require('./oled');
 const fonts = require('./fonts');
-const PlaylistManager = require('./playlistManager');
 
 const REFRESH_TRACK = 20;
 let api_state_waiting = false;
@@ -38,7 +37,6 @@ class APOledController {
         this.dimmed = false;
         this.pause_to_clock_timeout = null;
         this.currentMode = 'clock'; // Define currentMode as a property of the class
-        this.playlistManager = new PlaylistManager(this);
     }
 
     // Import methods for different modes
