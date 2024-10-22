@@ -1,4 +1,4 @@
-// modes/clock_mode.js
+// Updated script to enhance brightness for the clock display with black background and white text
 const date = require('date-and-time');
 const fs = require('fs');
 const path = require('path');
@@ -31,8 +31,8 @@ function parseUnifont(hexData) {
 
 const unifontMap = parseUnifont(unifontData);
 
-// Function to draw a scaled character with anti-aliasing
-function drawScaledCharWithAA(char, x, y, scale, driver) {
+// Function to draw a scaled character without anti-aliasing
+function drawScaledChar(char, x, y, scale, driver) {
     const charCode = char.charCodeAt(0);
     const charData = unifontMap[charCode];
 
@@ -41,55 +41,22 @@ function drawScaledCharWithAA(char, x, y, scale, driver) {
     charData.forEach((row, rowIndex) => {
         for (let bit = 0; bit < 8; bit++) {
             if (row & (1 << (7 - bit))) {
-                // Draw the primary pixel
+                // Draw the primary pixel at full brightness
                 for (let dy = 0; dy < scale; dy++) {
                     for (let dx = 0; dx < scale; dx++) {
-                        driver.drawPixel(x + bit * scale + dx, y + rowIndex * scale + dy, 1);
+                        driver.drawPixel(x + bit * scale + dx, y + rowIndex * scale + dy, 150); // Full intensity (white)
                     }
-                }
-
-                // Anti-aliasing: draw surrounding pixels at half intensity
-                // Top-left
-                if (rowIndex > 0 && !(charData[rowIndex - 1] & (1 << (7 - bit)))) {
-                    driver.drawPixel(x + bit * scale - 1, y + rowIndex * scale - 1, 0.5);
-                }
-                // Top
-                if (rowIndex > 0 && !(charData[rowIndex - 1] & (1 << (7 - bit)))) {
-                    driver.drawPixel(x + bit * scale, y + rowIndex * scale - 1, 0.5);
-                }
-                // Top-right
-                if (rowIndex > 0 && bit < 7 && !(charData[rowIndex - 1] & (1 << (6 - bit)))) {
-                    driver.drawPixel(x + (bit + 1) * scale, y + rowIndex * scale - 1, 0.5);
-                }
-                // Left
-                if (bit > 0 && !(row & (1 << (8 - bit)))) {
-                    driver.drawPixel(x + bit * scale - 1, y + rowIndex * scale, 0.5);
-                }
-                // Right
-                if (bit < 7 && !(row & (1 << (6 - bit)))) {
-                    driver.drawPixel(x + (bit + 1) * scale, y + rowIndex * scale, 0.5);
-                }
-                // Bottom-left
-                if (rowIndex < charData.length - 1 && !(charData[rowIndex + 1] & (1 << (7 - bit)))) {
-                    driver.drawPixel(x + bit * scale - 1, y + (rowIndex + 1) * scale, 0.5);
-                }
-                // Bottom
-                if (rowIndex < charData.length - 1 && !(charData[rowIndex + 1] & (1 << (7 - bit)))) {
-                    driver.drawPixel(x + bit * scale, y + (rowIndex + 1) * scale, 0.5);
-                }
-                // Bottom-right
-                if (rowIndex < charData.length - 1 && bit < 7 && !(charData[rowIndex + 1] & (1 << (6 - bit)))) {
-                    driver.drawPixel(x + (bit + 1) * scale, y + (rowIndex + 1) * scale, 0.5);
                 }
             }
         }
     });
 }
 
-// Function to draw a string using scaled unifont with anti-aliasing
-function drawScaledStringWithAA(string, x, y, scale, driver) {
+
+// Function to draw a string using scaled unifont without anti-aliasing
+function drawScaledString(string, x, y, scale, driver) {
     for (let i = 0; i < string.length; i++) {
-        drawScaledCharWithAA(string[i], x + (i * 8 * scale), y, scale, driver);
+        drawScaledChar(string[i], x + (i * 8 * scale), y, scale, driver);
     }
 }
 
@@ -105,8 +72,13 @@ module.exports = function clock_mode() {
     clearInterval(this.update_interval);
     this.page = "clock";
 
+    // Set the display contrast to maximum
+    if (typeof this.driver.setContrast === 'function') {
+        this.driver.setContrast(254); // Assuming 254 is the maximum value for contrast
+    }
+
     this.refresh_action = () => {
-        this.driver.buffer.fill(0x00); // Clear the display buffer
+        this.driver.buffer.fill(0x00); // Clear the display buffer to black (background)
         const ftime = date.format(new Date(), 'HH:mm');
 
         // Define the scale factor
@@ -125,10 +97,11 @@ module.exports = function clock_mode() {
         const shiftUp = 10;
         const startY = Math.floor((screenHeight - height) / 2) - shiftUp;
 
-        // Draw the scaled and centered time string with anti-aliasing
-        drawScaledStringWithAA(ftime, startX, startY, scale, this.driver);
+        // Draw the scaled and centered time string
+        drawScaledString(ftime, startX, startY, scale, this.driver);
 
-        this.driver.update(true); // Update the display to show the new frame
+        this.driver.update(false); // Update the display to show the new frame (use false for non-optimized update)
+        this.driver.update(true); // Do a second refresh to fully light up the pixels
     }
 
     this.refresh_action();

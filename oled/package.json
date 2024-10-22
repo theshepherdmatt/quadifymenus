@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "async": "^3.2.5",
+    "axios": "^1.7.7",
     "date-and-time": "^3.2.0",
     "i2c-bus": "^5.2.3",
     "onoff": "^6.0.3",
