@@ -148,7 +148,6 @@ class PlaylistManager {
             if (i === this.currentSelection) {
                 // Draw an arrow next to the highlighted item
                 this.oled.driver.setCursor(0, y + 2);
-<<<<<<< HEAD
                 this.oled.driver.writeString(fonts.monospace, 1, '>', 150); // Use '>' as a marker for the selected item
                 
                 // Write the playlist name next to the marker in white
@@ -162,21 +161,6 @@ class PlaylistManager {
                 // Write the playlist name in white on a black background
                 this.oled.driver.setCursor(12, y + 2);
                 this.oled.driver.writeString(fonts.monospace, 1, playlist.name, 255);
-=======
-                this.oled.driver.writeString(fonts.monospace, 1, '>', 1); // Use '>' as a marker for the selected item
-                
-                // Write the playlist name next to the marker in white
-                this.oled.driver.setCursor(12, y + 2); // Leave space for the arrow marker
-                this.oled.driver.writeString(fonts.monospace, 1, playlist.name, 1);
-                
-                // Optionally, underline the text for further emphasis
-                const textWidth = this.oled.driver.getStringWidthUnifont(playlist.name);
-                this.oled.driver.drawLine(12, y + itemHeight - 1, 12 + textWidth, y + itemHeight - 1, 1); // Draw underline below text
-            } else {
-                // Write the playlist name in white on a black background
-                this.oled.driver.setCursor(12, y + 2);
-                this.oled.driver.writeString(fonts.monospace, 1, playlist.name, 1);
->>>>>>> 9f85579ecba61cafad8a7cc324557ffa74072d0a
             }
         }
         this.oled.driver.update();
