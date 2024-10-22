@@ -140,27 +140,33 @@ class PlaylistManager {
     }
 
     // Method to render playlists on the OLED screen
-    renderPlaylists(startIndex, endIndex, itemHeight) {
+    renderPlaylists = (startIndex, endIndex, itemHeight) => {
         for (let i = startIndex; i < endIndex; i++) {
             const y = (i - startIndex) * itemHeight;
             const playlist = this.playlists[i];
-
+    
             if (i === this.currentSelection) {
-                // Highlight selected playlist
-                this.oled.driver.fillRect(0, y, this.oled.width, itemHeight, 1);
-
-                // Write the playlist name in black on white background
-                this.oled.driver.setCursor(2, y + 1);
-                this.oled.driver.writeString(fonts.monospace, 1, playlist.name, 0);
+                // Draw an arrow next to the highlighted item
+                this.oled.driver.setCursor(0, y + 2);
+                this.oled.driver.writeString(fonts.monospace, 1, '>', 1); // Use '>' as a marker for the selected item
+                
+                // Write the playlist name next to the marker in white
+                this.oled.driver.setCursor(12, y + 2); // Leave space for the arrow marker
+                this.oled.driver.writeString(fonts.monospace, 1, playlist.name, 1);
+                
+                // Optionally, underline the text for further emphasis
+                const textWidth = this.oled.driver.getStringWidthUnifont(playlist.name);
+                this.oled.driver.drawLine(12, y + itemHeight - 1, 12 + textWidth, y + itemHeight - 1, 1); // Draw underline below text
             } else {
-                // Write the playlist name in white on black background
-                this.oled.driver.setCursor(2, y + 1);
+                // Write the playlist name in white on a black background
+                this.oled.driver.setCursor(12, y + 2);
                 this.oled.driver.writeString(fonts.monospace, 1, playlist.name, 1);
             }
         }
         this.oled.driver.update();
-    }
-
+    };          
+    
+    
     // Method to move selection up or down
     moveSelection(direction) {
         console.log(`Moving playlist selection by ${direction}.`);
